@@ -114,7 +114,7 @@ module Sbmt
 
         def configure_verification_source(handle)
           if @pact_config.pact_broker_proxy_url.blank?
-            path = Rails.root.join("pacts").to_s
+            path = @pact_config.pact_dir || Rails.root.join("pacts").to_s
             logger.info("[verifier] pact broker url is not set, using #{path} as a verification source")
             return PactFfi::Verifier.add_directory_source(handle, path)
           end

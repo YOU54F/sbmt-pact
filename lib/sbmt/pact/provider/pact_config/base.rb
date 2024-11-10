@@ -6,7 +6,7 @@ module Sbmt
       module PactConfig
         class Base
           attr_reader :provider_name, :provider_version, :log_level, :provider_setup_server, :provider_setup_port, :pact_proxy_port,
-            :consumer_branch, :consumer_version, :consumer_name, :broker_url, :broker_username, :broker_password, :verify_only
+            :consumer_branch, :consumer_version, :consumer_name, :broker_url, :broker_username, :broker_password, :verify_only, :pact_dir
 
           PACT_BROKER_FILTER_TYPE_NONE = PactBrokerProxyRunner::FILTER_TYPE_NONE
           PACT_BROKER_FILTER_TYPE_GRPC = PactBrokerProxyRunner::FILTER_TYPE_GRPC
@@ -17,6 +17,7 @@ module Sbmt
           def initialize(provider_name:, opts: {})
             @provider_name = provider_name
             @log_level = opts[:log_level] || :info
+            @pact_dir = opts[:pact_dir] || nil
             @provider_setup_port = opts[:provider_setup_port] || 9001
             @pact_proxy_port = opts[:provider_setup_port] || 9002
             @provider_version = opts[:provider_version] || ENV.fetch("PACT_PROVIDER_VERSION", "1.0.0")
