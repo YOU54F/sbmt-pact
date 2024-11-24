@@ -28,7 +28,7 @@ module Sbmt
           @thread = Thread.new do
             @logger.debug "[webrick] starting http server"
 
-            # TODO: support non rail apps 
+            # TODO: support non rail apps
             # TODO: load from config.ru, if not rails and no app provided?
             ::Rack::Handler::WEBrick.run(@app || Rails.application,
               Host: @options[:host],
