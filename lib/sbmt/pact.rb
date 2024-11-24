@@ -43,6 +43,6 @@ loader.tag = "sbmt-pact"
 loader.ignore("#{__dir__}/pact/version.rb")
 loader.ignore("#{__dir__}/pact/rspec.rb")
 loader.ignore("#{__dir__}/pact/rspec")
-
+loader.ignore("#{__dir__}/pact/railtie.rb") unless defined?(Rails::Railtie)
 loader.setup
 loader.eager_load

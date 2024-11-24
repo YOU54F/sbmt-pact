@@ -21,6 +21,7 @@ module Sbmt
 
         def perform_request(env)
           request = Rack::Request.new(env)
+          env["rack.timeout"] ||= ENV.fetch("PACT_BROKER_REQUEST_TIMEOUT", 5).to_i
           @path = request.path
 
           super

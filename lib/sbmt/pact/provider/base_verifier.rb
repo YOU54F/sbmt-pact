@@ -15,7 +15,7 @@ module Sbmt
 
         class VerifierError < Sbmt::Pact::Error; end
 
-        DEFAULT_CONSUMER_SELECTORS = nil
+        DEFAULT_CONSUMER_SELECTORS = {}
 
         # https://docs.rs/pact_ffi/0.4.17/pact_ffi/verifier/fn.pactffi_verify.html#errors
         VERIFICATION_ERRORS = {
@@ -36,10 +36,10 @@ module Sbmt
         def verify!
           raise VerifierError.new("interaction is designed to be used one-time only") if defined?(@used)
 
-          if consumer_selectors.blank?
-            logger.info("[verifier] does not need to verify consumer #{@pact_config.consumer_name}")
-            return
-          end
+          # if consumer_selectors.blank?
+          #   logger.info("[verifier] does not need to verify consumer #{@pact_config.consumer_name}")
+          #   return
+          # end
 
           exception = nil
           pact_handle = init_pact
@@ -105,7 +105,34 @@ module Sbmt
           PactFfi::Verifier.set_no_pacts_is_error(handle, bool_to_int(@pact_config.fail_if_no_pacts_found))
 
           add_provider_transport(handle)
-          set_filter_info(handle)
+
+          # the core doesnt pick up these env vars, so we need to set them here
+          # https://github.com/pact-foundation/pact-reference/issues/451#issuecomment-2338130587
+          # PACT_DESCRIPTION
+          # Only validate interactions whose descriptions match this filter (regex format)
+          # PACT_PROVIDER_STATE
+          # Only validate interactions whose provider states match this filter (regex format)
+          # PACT_PROVIDER_NO_STATE
+          # Only validate interactions that have no defined provider state (true or false)
+          PactFfi::Verifier.set_filter_info(
+            handle,
+            ENV["PACT_DESCRIPTION"] || nil,
+            ENV["PACT_PROVIDER_STATE"] || nil,
+            bool_to_int(ENV["PACT_PROVIDER_NO_STATE"] || false)
+          )
+
+          # filters based on INTERACTION_FILTER_REGEX. e.g. "^grpc:.+", opinionated and v4 specific, so removed for now.
+          ## set_filter_info(handle)
+          # descriptions are set and read from parsed v4 spec pacts in a pact broker proxy
+
+          #  excerpt from lib/sbmt/pact/provider/pact_broker_proxy.rb
+          # pact_json_hash["interactions"].each do |interaction|
+          #   set_description_prefix(interaction, "grpc:") if interaction["transport"] == "grpc" && filter_type == :grpc
+          #   set_description_prefix(interaction, "http:") if interaction["transport"] == "http" && filter_type == :http
+          #   set_description_prefix(interaction, "http:") if interaction["type"] == "Synchronous/HTTP" && filter_type == :http
+          #   set_description_prefix(interaction, "async:") if interaction["type"] == "Asynchronous/Messages" && filter_type == :async
+          #   set_description_prefix(interaction, "sync:") if interaction["type"] == "Synchronous/Messages" && filter_type == :sync
+          # end
 
           Sbmt::Pact::Native::Logger.log_to_stdout(@pact_config.log_level)
 
@@ -153,15 +180,25 @@ module Sbmt
         def configure_verification_source(handle, c_provider_version_tags, c_consumer_version_tags)
           logger.info("[verifier] configuring verification source")
           if @pact_config.pact_broker_proxy_url.blank? && @pact_config.pact_uri.blank?
+            # todo support non rail apps
             path = @pact_config.pact_dir || Rails.root.join("pacts").to_s
             logger.info("[verifier] pact broker url or pact uri is not set, using directory #{path} as a verification source")
             return PactFfi::Verifier.add_directory_source(handle, path)
           end
 
           if @pact_config.pact_uri.present?
-            logger.info("[verifier] using pact uri #{@pact_config.pact_uri} as a verification source")
-            PactFfi::Verifier.url_source(handle, @pact_config.pact_uri, @pact_config.broker_username, @pact_config.broker_password, @pact_config.broker_token)
+            if @pact_config.pact_uri.start_with?("http")
+              logger.info("[verifier] using pact uri #{@pact_config.pact_uri} as a verification source")
+              PactFfi::Verifier.url_source(handle, @pact_config.pact_uri, @pact_config.broker_username, @pact_config.broker_password, @pact_config.broker_token)
+            else
+              logger.info("[verifier] using pact file #{@pact_config.pact_uri} as a verification source")
+              PactFfi::Verifier.add_file_source(handle, @pact_config.pact_uri)
+            end
           else
+            if consumer_selectors.nil?
+              consumer_selectors = []
+              # raise VerifierError.new("A pact source must be provided")
+            end
             logger.info("[verifier] using pact broker url #{@pact_config.broker_url} with consumer selectors: #{JSON.dump(consumer_selectors)} as a verification source")
 
             filters = consumer_selectors.map do |selector|
@@ -174,7 +211,7 @@ module Sbmt
         end
 
         def consumer_selectors
-          @pact_config.consumer_version_selectors.presence || @consumer_selectors ||= build_consumer_selectors(@pact_config.verify_only, @pact_config.consumer_name, @pact_config.consumer_branch)
+          @pact_config.consumer_version_selectors.presence || @consumer_selectors ||= build_consumer_selectors(@pact_config.verify_only, @pact_config.consumer_name, @pact_config.consumer_branch) if @pact_config.consumer_version_selectors
         end
 
         def build_consumer_selectors(verify_only, consumer_name, consumer_branch)

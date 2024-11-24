@@ -10,6 +10,7 @@ module Sbmt
           def initialize(consumer_name:, provider_name:, opts: {})
             @consumer_name = consumer_name
             @provider_name = provider_name
+            # TODO - support non rail apps
             @pact_dir = opts[:pact_dir] || Rails.root.join("pacts").to_s
             @log_level = opts[:log_level] || :info
           end

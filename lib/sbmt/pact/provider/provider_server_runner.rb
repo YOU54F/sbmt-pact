@@ -39,7 +39,7 @@ module Sbmt
           @server.mount(VERIFY_MESSAGE_PATH, @message_servlet)
 
           @thread = Thread.new do
-            Rails.logger.debug "starting provider setup server"
+            @logger.debug "starting provider setup server"
             @server.start
           end
         end
