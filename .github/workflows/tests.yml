@@ -21,7 +21,7 @@ jobs:
           ruby-version: "3.3"
       - name: Install dependencies
         run: |
-          gem install dip
+          gem install dip -v 8.1
           dip bundle install
       - name: Run linter
         run: dip rubocop
@@ -44,7 +44,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
       - name: Install dependencies
         run: |
-          gem install dip
+          gem install dip -v 8.1
           dip provision
       - name: Run tests
         run: dip appraisal rspec --format RspecJunitFormatter --out test-results/rspec_${{ matrix.ruby }}.xml --format documentation
