@@ -90,17 +90,27 @@ module Sbmt
           #     provider_branch: *const c_char,
           # )
           c_provider_version_tags = create_c_pointer_array_from_string_array(@pact_config.provider_version_tags)
+          c_provider_version_tags_size = @pact_config.provider_version_tags.size
           c_consumer_version_tags = create_c_pointer_array_from_string_array(@pact_config.consumer_version_tags)
+          c_consumer_version_tags_size = @pact_config.consumer_version_tags.size
+
+          if @pact_config.provider_build_uri.present?
+            begin
+              URI.parse(@pact_config.provider_build_uri)
+            rescue URI::InvalidURIError
+              raise VerifierError.new("provider_build_uri is not a valid URI")
+            end
+          end
 
           if @pact_config.publish_verification_results == true
             if @pact_config.provider_version
-              PactFfi::Verifier.set_publish_options(handle, @pact_config.provider_version, @pact_config.provider_build_uri, c_provider_version_tags, c_provider_version_tags.size, @pact_config.provider_version_branch)
+              PactFfi::Verifier.set_publish_options(handle, @pact_config.provider_version, @pact_config.provider_build_uri, c_provider_version_tags, c_provider_version_tags_size, @pact_config.provider_version_branch)
             else
               logger.warn("[verifier] - unable to publish verification results as provider version is not set")
             end
           end
 
-          configure_verification_source(handle, c_provider_version_tags, c_consumer_version_tags)
+          configure_verification_source(handle, c_provider_version_tags, c_provider_version_tags_size, c_consumer_version_tags, c_consumer_version_tags_size)
 
           PactFfi::Verifier.set_no_pacts_is_error(handle, bool_to_int(@pact_config.fail_if_no_pacts_found))
 
@@ -177,11 +187,11 @@ module Sbmt
           @pact_config.stop_servers
         end
 
-        def configure_verification_source(handle, c_provider_version_tags, c_consumer_version_tags)
+        def configure_verification_source(handle, c_provider_version_tags, c_provider_version_tags_size, c_consumer_version_tags, c_consumer_version_tags_size)
           logger.info("[verifier] configuring verification source")
           if @pact_config.pact_broker_proxy_url.blank? && @pact_config.pact_uri.blank?
             # todo support non rail apps
-            path = @pact_config.pact_dir || Rails.root.join("pacts").to_s
+            path = @pact_config.pact_dir || (defined?(Rails) ? Rails.root.join("pacts").to_s : "pacts")
             logger.info("[verifier] pact broker url or pact uri is not set, using directory #{path} as a verification source")
             return PactFfi::Verifier.add_directory_source(handle, path)
           end
@@ -195,10 +205,6 @@ module Sbmt
               PactFfi::Verifier.add_file_source(handle, @pact_config.pact_uri)
             end
           else
-            if consumer_selectors.nil?
-              consumer_selectors = []
-              # raise VerifierError.new("A pact source must be provided")
-            end
             logger.info("[verifier] using pact broker url #{@pact_config.broker_url} with consumer selectors: #{JSON.dump(consumer_selectors)} as a verification source")
 
             filters = consumer_selectors.map do |selector|
@@ -206,12 +212,12 @@ module Sbmt
             end
             filters_ptr = FFI::MemoryPointer.new(:pointer, filters.size + 1)
             filters_ptr.write_array_of_pointer(filters)
-            PactFfi::Verifier.broker_source_with_selectors(handle, @pact_config.pact_broker_proxy_url, @pact_config.broker_username, @pact_config.broker_password, @pact_config.broker_token, bool_to_int(@pact_config.enable_pending), @pact_config.include_wip_pacts_since, c_provider_version_tags, c_provider_version_tags.size, @pact_config.provider_version_branch, filters_ptr, filters.size, c_consumer_version_tags, c_consumer_version_tags.size)
+            PactFfi::Verifier.broker_source_with_selectors(handle, @pact_config.pact_broker_proxy_url, @pact_config.broker_username, @pact_config.broker_password, @pact_config.broker_token, bool_to_int(@pact_config.enable_pending), @pact_config.include_wip_pacts_since, c_provider_version_tags, c_provider_version_tags_size, @pact_config.provider_version_branch, filters_ptr, consumer_selectors.size, c_consumer_version_tags, c_consumer_version_tags_size)
           end
         end
 
         def consumer_selectors
-          @pact_config.consumer_version_selectors.presence || @consumer_selectors ||= build_consumer_selectors(@pact_config.verify_only, @pact_config.consumer_name, @pact_config.consumer_branch) if @pact_config.consumer_version_selectors
+          (!@pact_config.consumer_version_selectors.empty? && @pact_config.consumer_version_selectors) || @consumer_selectors if @pact_config.consumer_version_selectors
         end
 
         def build_consumer_selectors(verify_only, consumer_name, consumer_branch)
