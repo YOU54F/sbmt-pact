@@ -206,7 +206,7 @@ module Sbmt
             end
           else
             logger.info("[verifier] using pact broker url #{@pact_config.broker_url} with consumer selectors: #{JSON.dump(consumer_selectors)} as a verification source")
-
+            consumer_selectors = [] if consumer_selectors.nil?
             filters = consumer_selectors.map do |selector|
               FFI::MemoryPointer.from_string(JSON.dump(selector).to_s)
             end
