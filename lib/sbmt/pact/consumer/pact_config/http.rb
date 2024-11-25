@@ -13,7 +13,7 @@ module Sbmt
             super
 
             @mock_host = opts[:mock_host] || "127.0.0.1"
-            @mock_port = opts[:mock_port] || 3000
+            @mock_port = opts[:mock_port] || 0
           end
 
           def new_interaction(description = nil)

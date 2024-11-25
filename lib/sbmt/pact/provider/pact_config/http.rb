@@ -13,7 +13,7 @@ module Sbmt
           def initialize(provider_name:, opts: {})
             super
 
-            @http_port = opts[:http_port] || 3000
+            @http_port = opts[:http_port] || 0
             @app = opts[:app] || nil
           end
 
