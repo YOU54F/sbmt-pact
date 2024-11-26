@@ -36,7 +36,7 @@ module Sbmt
           @pact_config = pact_config
           @description = description || ""
 
-          @pact_handle = init_pact
+          @pact_handle = pact_config.pact_handle ||= init_pact
           @pact_interaction = PactFfi.new_interaction(pact_handle, full_description)
 
           ObjectSpace.define_finalizer(self, self.class.create_finalizer(pact_interaction))

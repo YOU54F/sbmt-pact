@@ -7,13 +7,14 @@ module Sbmt
     module Consumer
       module PactConfig
         class Http < Base
-          attr_reader :mock_host, :mock_port
+          attr_reader :mock_host, :mock_port, :pact_handle
 
           def initialize(consumer_name:, provider_name:, opts: {})
             super
 
             @mock_host = opts[:mock_host] || "127.0.0.1"
             @mock_port = opts[:mock_port] || 0
+            @pact_handle = PactFfi.new_pact(consumer_name, provider_name)
           end
 
           def new_interaction(description = nil)
