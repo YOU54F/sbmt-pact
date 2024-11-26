@@ -37,7 +37,7 @@ module Sbmt
           @description = description || ""
 
           @pact_handle = pact_config.pact_handle ||= init_pact
-          @pact_interaction = PactFfi.new_interaction(pact_handle, full_description)
+          @pact_interaction = PactFfi.new_interaction(pact_handle, @description)
 
           ObjectSpace.define_finalizer(self, self.class.create_finalizer(pact_interaction))
         end
@@ -54,11 +54,11 @@ module Sbmt
 
         def upon_receiving(description)
           @description = description
-          PactFfi.upon_receiving(pact_interaction, full_description)
+          PactFfi.upon_receiving(pact_interaction, @description)
           self
         end
 
-        def with_request(method, path, query: {}, headers: {}, body: nil)
+        def with_request(method: nil, path: nil, query: {}, headers: {}, body: nil)
           interaction_part = PactFfi::FfiInteractionPart["INTERACTION_PART_REQUEST"]
           PactFfi.with_request(pact_interaction, method.to_s, format_value(path))
 
@@ -77,7 +77,7 @@ module Sbmt
           self
         end
 
-        def with_response(status, headers: {}, body: nil)
+        def will_respond_with(status: nil, headers: {}, body: nil)
           interaction_part = PactFfi::FfiInteractionPart["INTERACTION_PART_RESPONSE"]
           PactFfi.response_status(pact_interaction, status)
 
@@ -117,14 +117,14 @@ module Sbmt
         attr_reader :pact_handle, :pact_interaction, :pact_config
 
         def mismatches_error_msg(mock_server)
-          rspec_example_desc = RSpec.current_example&.full_description
+          rspec_example_desc = RSpec.current_example&.description
 
           "#{rspec_example_desc} has mismatches: #{mock_server.mismatches}"
         end
 
         def init_pact
           handle = PactFfi.new_pact(pact_config.consumer_name, pact_config.provider_name)
-          PactFfi.with_specification(handle, PactFfi::FfiSpecificationVersion["SPECIFICATION_VERSION_V4"])
+          PactFfi.with_specification(handle, PactFfi::FfiSpecificationVersion["SPECIFICATION_VERSION_#{pact_config.pact_specification}"])
           PactFfi.with_pact_metadata(handle, "sbmt-pact", "pact-ffi", PactFfi.version)
 
           Sbmt::Pact::Native::Logger.log_to_stdout(pact_config.log_level)
@@ -138,10 +138,6 @@ module Sbmt
           return JSON.dump({value: obj}) if obj.is_a?(Array)
 
           JSON.dump(obj)
-        end
-
-        def full_description
-          "#{DESCRIPTION_PREFIX}#{@description}"
         end
       end
     end
