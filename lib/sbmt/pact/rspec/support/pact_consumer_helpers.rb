@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "pact_message_helpers"
+require "json"
 
 module SbmtPactConsumerDsl
   include Sbmt::Pact::Matchers
@@ -35,6 +36,10 @@ module SbmtPactConsumerDsl
     pact_config.new_interaction(description)
   end
 
+  def reset_pact
+    pact_config.reset_pact
+  end
+
   def pact_config
     instance_variable_get(:@_pact_config)
   end
@@ -51,11 +56,20 @@ module SbmtPactConsumerDsl
       mock_server.write_pacts!(pact_config.pact_dir)
     else
       msg = mismatches_error_msg(mock_server)
-      raise InteractionMismatchesError.new(msg)
+      raise Sbmt::Pact::Consumer::HttpInteractionBuilder::InteractionMismatchesError.new(msg)
     end
   ensure
     @used = true
     mock_server&.cleanup
+    reset_pact
+  end
+
+  def mismatches_error_msg(mock_server)
+    rspec_example_desc = RSpec.current_example&.description
+    mismatches = JSON.pretty_generate(JSON.parse(mock_server.mismatches))
+    mismatches_with_colored_keys = mismatches.gsub(/"([^"]+)":/) { |match| "\e[34m#{match}\e[0m" } # Blue keys / white values
+
+    "#{rspec_example_desc} has mismatches: #{mismatches_with_colored_keys}"
   end
 end
 

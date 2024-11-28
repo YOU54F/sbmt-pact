@@ -23,6 +23,10 @@ module Sbmt
             HttpInteractionBuilder.new(self, description: description)
           end
 
+          def reset_pact
+            @pact_handle = init_pact
+          end
+
           def get_pact_specification(opts)
             pact_spec_version = opts[:pact_specification] || "V4"
             unless pact_spec_version.match?(/^v?[1-4](\.\d+){0,2}$/i)
