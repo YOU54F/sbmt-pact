@@ -36,9 +36,7 @@ module SbmtPactConsumerDsl
     pact_config.new_interaction(description)
   end
 
-  def reset_pact
-    pact_config.reset_pact
-  end
+  delegate :reset_pact, to: :pact_config
 
   def pact_config
     instance_variable_get(:@_pact_config)

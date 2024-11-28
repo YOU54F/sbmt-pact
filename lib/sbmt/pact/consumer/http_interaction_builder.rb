@@ -68,15 +68,15 @@ module Sbmt
           if query.is_a?(Array)
             key_index = Hash.new(0)
             query.each do |query_item|
-                InteractionContents.basic(query_item).each_pair do |key, value_item|
+              InteractionContents.basic(query_item).each_pair do |key, value_item|
                 PactFfi.with_query_parameter_v2(pact_interaction, key.to_s, key_index[key], format_value(value_item))
                 key_index[key] += 1
-                end
+              end
             end
           else
-            InteractionContents.basic(query).each_pair do |key, value_item,|
+            InteractionContents.basic(query).each_pair do |key, value_item|
               PactFfi.with_query_parameter_v2(pact_interaction, key.to_s, 0, format_value(value_item))
-           end
+            end
           end
 
           InteractionContents.basic(headers).each_pair do |key, value_item|
@@ -136,7 +136,7 @@ module Sbmt
           rspec_example_desc = RSpec.current_example&.description
           mismatches = JSON.pretty_generate(JSON.parse(mock_server.mismatches))
           mismatches_with_colored_keys = mismatches.gsub(/"([^"]+)":/) { |match| "\e[34m#{match}\e[0m" } # Blue keys / white values
-      
+
           "#{rspec_example_desc} has mismatches: #{mismatches_with_colored_keys}"
         end
 
