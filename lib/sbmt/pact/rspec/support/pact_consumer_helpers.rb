@@ -36,7 +36,9 @@ module SbmtPactConsumerDsl
     pact_config.new_interaction(description)
   end
 
-  delegate :reset_pact, to: :pact_config
+  def reset_pact # rubocop:disable Rails/Delegate
+    pact_config.reset_pact
+  end
 
   def pact_config
     instance_variable_get(:@_pact_config)
