@@ -14,13 +14,14 @@ module Sbmt
         FILTER_TYPE_SYNC = :sync
         FILTER_TYPE_HTTP = :http
 
-        def initialize(pact_broker_host:, filter_type: nil, port: 9002, host: "127.0.0.1", pact_broker_user: nil, pact_broker_password: nil, logger: nil)
+        def initialize(pact_broker_host:, filter_type: nil, port: 9002, host: "127.0.0.1", pact_broker_user: nil, pact_broker_password: nil, pact_broker_token: nil, logger: nil)
           @host = host
           @port = port
           @pact_broker_host = pact_broker_host
           @filter_type = filter_type
           @pact_broker_user = pact_broker_user
           @pact_broker_password = pact_broker_password
+          @pact_broker_token = pact_broker_token
           @logger = logger || Logger.new($stdout)
 
           @thread = nil
@@ -36,12 +37,17 @@ module Sbmt
           @server = WEBrick::HTTPServer.new({BindAddress: @host, Port: @port}, WEBrick::Config::HTTP)
           @server.mount("/", Rack::Handler::WEBrick, PactBrokerProxy.new(
             nil,
-            backend: @pact_broker_host, streaming: false, filter_type: @filter_type,
-            username: @pact_broker_user, password: @pact_broker_password, logger: @logger
+            backend: @pact_broker_host,
+            streaming: false,
+            filter_type: @filter_type,
+            username: @pact_broker_user || nil,
+            password: @pact_broker_password || nil,
+            token: @pact_broker_token || nil,
+            logger: @logger
           ))
 
           @thread = Thread.new do
-            Rails.logger.debug "starting pact broker proxy server"
+            @logger.debug "starting pact broker proxy server"
             @server.start
           end
         end

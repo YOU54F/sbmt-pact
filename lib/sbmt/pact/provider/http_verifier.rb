@@ -13,7 +13,7 @@ module Sbmt
           super
 
           raise ArgumentError, "pact_config must be an instance of Sbmt::Pact::Provider::PactConfig::Http" unless pact_config.is_a?(::Sbmt::Pact::Provider::PactConfig::Http)
-          @http_server = HttpServer.new(host: "127.0.0.1", port: @pact_config.http_port)
+          @http_server = HttpServer.new(host: "127.0.0.1", port: @pact_config.http_port, app: @pact_config.app)
         end
 
         private

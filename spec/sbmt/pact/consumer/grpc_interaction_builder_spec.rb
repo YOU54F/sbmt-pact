@@ -8,7 +8,7 @@ RSpec.describe Sbmt::Pact::Consumer::GrpcInteractionBuilder do
     subject
       .with_service(proto_path, "Pets/PetById")
       .with_request(param: "some data")
-      .with_response(result: "some data")
+      .will_respond_with(result: "some data")
   end
 
   it "builds proper json" do

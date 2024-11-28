@@ -8,14 +8,13 @@ module Sbmt
   module Pact
     module Consumer
       class MessageInteractionBuilder
-        DESCRIPTION_PREFIX = "async: "
         META_CONTENT_TYPE_HEADER = "contentType"
 
         JSON_CONTENT_TYPE = "application/json"
         PROTO_CONTENT_TYPE = "application/protobuf"
 
         PROTOBUF_PLUGIN_NAME = "protobuf"
-        PROTOBUF_PLUGIN_VERSION = "0.4.0"
+        PROTOBUF_PLUGIN_VERSION = "0.5.5"
 
         # https://docs.rs/pact_ffi/latest/pact_ffi/mock_server/handles/fn.pactffi_write_message_pact_file.html
         WRITE_PACT_FILE_ERRORS = {
@@ -124,7 +123,7 @@ module Sbmt
           pact_handle = init_pact
           init_plugin!(pact_handle) if proto_interaction?
 
-          message_pact = PactFfi::MessageConsumer.new_message_interaction(pact_handle, description)
+          message_pact = PactFfi::MessageConsumer.new_message_interaction(pact_handle, @description)
 
           configure_interaction!(message_pact)
 
@@ -242,12 +241,12 @@ module Sbmt
             result = PactFfi::PluginConsumer.interaction_contents(message_pact, 0, PROTO_CONTENT_TYPE, interaction_json)
             if CREATE_INTERACTION_ERRORS[result].present?
               error = CREATE_INTERACTION_ERRORS[result]
-              raise CreateInteractionError.new("There was an error while trying to add interaction \"#{description}\"", error[:reason], error[:status])
+              raise CreateInteractionError.new("There was an error while trying to add interaction \"#{@description}\"", error[:reason], error[:status])
             end
           else
             result = PactFfi.with_body(message_pact, 0, JSON_CONTENT_TYPE, interaction_json)
             unless result
-              raise InteractionMismatchesError.new("There was an error while trying to add message interaction contents \"#{description}\"")
+              raise InteractionMismatchesError.new("There was an error while trying to add message interaction contents \"#{@description}\"")
             end
           end
 
@@ -255,10 +254,6 @@ module Sbmt
           InteractionContents.basic(@meta.merge(@headers)).each_pair do |key, value|
             PactFfi::MessageConsumer.with_metadata_v2(message_pact, key.to_s, JSON.dump(value))
           end
-        end
-
-        def description
-          "#{DESCRIPTION_PREFIX}#{@description}"
         end
 
         def init_plugin!(pact_handle)

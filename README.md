@@ -58,7 +58,7 @@ RSpec.describe "SomePactConsumerTestForAnyTransport", :pact do
           .with_request(...)
           # the description of the response using the matchers
           # the name and parameters of the method differ for different transports
-          .with_response(...)
+          .will_respond_with(...)
           # further, there are differences for different types of transports,
           # for more information, see the relevant sections of the documentation
       end
@@ -83,8 +83,8 @@ Common DSL Methods:
 ### HTTP consumers
 
 Specific DSL methods:
-- `with_request(HTTP_METHOD, QUERY_PATH, {headers: kv_hash, body: kv_hash})` - request definition
-- `with_response(HTTP_STATUS, {headers: kv_hash, body: kv_hash})` - response definition
+- `with_request({method: string, path: string, headers: kv_hash, body: kv_hash})` - request definition
+- `will_respond_with({status: int, headers: kv_hash, body: kv_hash})` - response definition
 
 More at [http_client_spec.rb](spec/pact/providers/sbmt-pact-test-app/http_client_spec.rb)
 
@@ -93,7 +93,7 @@ More at [http_client_spec.rb](spec/pact/providers/sbmt-pact-test-app/http_client
 Specific DSL methods:
 - `with_service(PROTO_PATH, RPC_SERVICE_AND_ACTION)` - specifies the contract used, PROTO_PATH is relative from the app root
 - `with_request(request_kv_hash)` - request definition
-- `with_response(response_kv_hash)` - response definition
+- `will_respond_with(response_kv_hash)` - response definition
 
 More at [grpc_client_spec.rb](spec/pact/providers/sbmt-pact-test-app/grpc_client_spec.rb)
 

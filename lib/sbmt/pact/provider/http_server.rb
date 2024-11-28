@@ -14,6 +14,10 @@ module Sbmt
 
           @host = @options[:host] || "localhost"
           @logger = @options[:logger] || ::Logger.new($stdout)
+          # allow any rack based app to be passed in, otherwise
+          # we will load a Rails.application
+          # allows for backwards compat with pact-ruby v1
+          @app = @options[:app] || nil
         end
 
         def start
@@ -24,7 +28,9 @@ module Sbmt
           @thread = Thread.new do
             @logger.debug "[webrick] starting http server"
 
-            ::Rack::Handler::WEBrick.run(Rails.application,
+            # TODO: support non rail apps
+            # TODO: load from config.ru, if not rails and no app provided?
+            ::Rack::Handler::WEBrick.run(@app || Rails.application,
               Host: @options[:host],
               Port: @options[:port],
               Logger: @logger,

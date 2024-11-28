@@ -3,6 +3,7 @@
 require "pact/ffi/sync_message_consumer"
 require "pact/ffi/plugin_consumer"
 require "pact/ffi/logger"
+require "json"
 
 module Sbmt
   module Pact
@@ -36,8 +37,8 @@ module Sbmt
           @pact_config = pact_config
           @description = description || ""
 
-          @pact_handle = init_pact
-          @pact_interaction = PactFfi.new_interaction(pact_handle, full_description)
+          @pact_handle = pact_config.pact_handle ||= init_pact
+          @pact_interaction = PactFfi.new_interaction(pact_handle, @description)
 
           ObjectSpace.define_finalizer(self, self.class.create_finalizer(pact_interaction))
         end
@@ -54,16 +55,28 @@ module Sbmt
 
         def upon_receiving(description)
           @description = description
-          PactFfi.upon_receiving(pact_interaction, full_description)
+          PactFfi.upon_receiving(pact_interaction, @description)
           self
         end
 
-        def with_request(method, path, query: {}, headers: {}, body: nil)
+        def with_request(method: nil, path: nil, query: {}, headers: {}, body: nil)
           interaction_part = PactFfi::FfiInteractionPart["INTERACTION_PART_REQUEST"]
           PactFfi.with_request(pact_interaction, method.to_s, format_value(path))
 
-          InteractionContents.basic(query).each_pair do |key, value_item|
-            PactFfi.with_query_parameter_v2(pact_interaction, key.to_s, 0, format_value(value_item))
+          # Processing as an array of hashes, allows us to consider duplicate keys
+          # which should be passed to the core, at a non 0 index
+          if query.is_a?(Array)
+            key_index = Hash.new(0)
+            query.each do |query_item|
+              InteractionContents.basic(query_item).each_pair do |key, value_item|
+                PactFfi.with_query_parameter_v2(pact_interaction, key.to_s, key_index[key], format_value(value_item))
+                key_index[key] += 1
+              end
+            end
+          else
+            InteractionContents.basic(query).each_pair do |key, value_item|
+              PactFfi.with_query_parameter_v2(pact_interaction, key.to_s, 0, format_value(value_item))
+            end
           end
 
           InteractionContents.basic(headers).each_pair do |key, value_item|
@@ -77,7 +90,7 @@ module Sbmt
           self
         end
 
-        def with_response(status, headers: {}, body: nil)
+        def will_respond_with(status: nil, headers: {}, body: nil)
           interaction_part = PactFfi::FfiInteractionPart["INTERACTION_PART_RESPONSE"]
           PactFfi.response_status(pact_interaction, status)
 
@@ -110,6 +123,9 @@ module Sbmt
         ensure
           @used = true
           mock_server&.cleanup
+          # Reset the pact handle to allow for a new interaction to be built
+          # without previous interactions being included
+          @pact_config.reset_pact
         end
 
         private
@@ -117,14 +133,16 @@ module Sbmt
         attr_reader :pact_handle, :pact_interaction, :pact_config
 
         def mismatches_error_msg(mock_server)
-          rspec_example_desc = RSpec.current_example&.full_description
+          rspec_example_desc = RSpec.current_example&.description
+          mismatches = JSON.pretty_generate(JSON.parse(mock_server.mismatches))
+          mismatches_with_colored_keys = mismatches.gsub(/"([^"]+)":/) { |match| "\e[34m#{match}\e[0m" } # Blue keys / white values
 
-          "#{rspec_example_desc} has mismatches: #{mock_server.mismatches}"
+          "#{rspec_example_desc} has mismatches: #{mismatches_with_colored_keys}"
         end
 
         def init_pact
           handle = PactFfi.new_pact(pact_config.consumer_name, pact_config.provider_name)
-          PactFfi.with_specification(handle, PactFfi::FfiSpecificationVersion["SPECIFICATION_VERSION_V4"])
+          PactFfi.with_specification(handle, PactFfi::FfiSpecificationVersion["SPECIFICATION_VERSION_#{pact_config.pact_specification}"])
           PactFfi.with_pact_metadata(handle, "sbmt-pact", "pact-ffi", PactFfi.version)
 
           Sbmt::Pact::Native::Logger.log_to_stdout(pact_config.log_level)
@@ -138,10 +156,6 @@ module Sbmt
           return JSON.dump({value: obj}) if obj.is_a?(Array)
 
           JSON.dump(obj)
-        end
-
-        def full_description
-          "#{DESCRIPTION_PREFIX}#{@description}"
         end
       end
     end

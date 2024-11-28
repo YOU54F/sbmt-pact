@@ -6,7 +6,7 @@ module Sbmt
   module Pact
     module Consumer
       class MockServer
-        attr_reader :host, :port, :transport, :handle
+        attr_reader :host, :port, :transport, :handle, :url
 
         TRANSPORT_HTTP = "http"
         TRANSPORT_GRPC = "grpc"
@@ -50,7 +50,13 @@ module Sbmt
           @port = port
 
           @handle = init_transport!
-
+          # the returned handle is the port number
+          # we set it here, so we can consume a port number of 0
+          # and allow pact to assign a random available port
+          @port = @handle
+          # construct the url for the mock server
+          # as a convenience for the user
+          @url = "#{transport}://#{host}:#{@handle}"
           # TODO: handle auto-GC of native memory
           # ObjectSpace.define_finalizer(self, proc do
           #   cleanup
@@ -81,6 +87,7 @@ module Sbmt
 
         def init_transport!
           handle = PactFfi::MockServer.create_for_transport(@pact, @host, @port, @transport, nil)
+          # the returned handle is the port number
           return handle if CREATE_TRANSPORT_ERRORS[handle].blank?
 
           error = CREATE_TRANSPORT_ERRORS[handle]

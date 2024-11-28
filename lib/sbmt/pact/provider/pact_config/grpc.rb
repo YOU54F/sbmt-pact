@@ -12,7 +12,7 @@ module Sbmt
           def initialize(provider_name:, opts: {})
             super
 
-            @grpc_port = opts[:grpc_port] || 3009
+            @grpc_port = opts[:grpc_port] || 0
             @grpc_services = opts[:grpc_services] || []
           end
 

@@ -26,6 +26,13 @@ module Sbmt
 
         def serialize(hash, format)
           # serialize recursively
+          if hash.is_a?(String)
+            return hash
+          end
+          if hash.is_a?(Sbmt::Pact::Matchers::Base)
+            return hash.as_basic if format == :basic
+            return hash.as_plugin if format == :plugin
+          end
           hash.each_pair do |key, value|
             next serialize(value, format) if value.is_a?(Hash)
             next hash[key] = value.map { |v| serialize(v, format) } if value.is_a?(Array)
