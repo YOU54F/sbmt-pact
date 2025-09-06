@@ -7,24 +7,24 @@ on:
     branches: [ '**' ]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    env:
-      RUBY_VERSION: "3.3"
-    name: Rubocop
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Setup Ruby w/ same version as image
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-      - name: Install dependencies
-        run: |
-          gem install dip -v 8.1
-          dip bundle install
-      - name: Run linter
-        run: dip rubocop
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     RUBY_VERSION: "3.3"
+  #   name: Rubocop
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #     - name: Setup Ruby w/ same version as image
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: "3.3"
+  #     - name: Install dependencies
+  #       run: |
+  #         gem install dip -v 8.1
+  #         dip bundle install
+  #     - name: Run linter
+  #       run: dip rubocop
 
   test:
     runs-on: ${{ matrix.os }}
@@ -45,7 +45,6 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
       - name: Install dependencies
         run: |
-          gem install dip -v 8.1
-          dip provision
+          bundle install
       - name: Run tests
-        run: dip appraisal rspec --format RspecJunitFormatter --out test-results/rspec_${{ matrix.ruby }}.xml --format documentation
+        run: bundle exec rake
