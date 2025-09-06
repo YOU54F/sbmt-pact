@@ -12,7 +12,7 @@ require "vcr"
 require "faraday"
 require "gruf"
 require "gruf/rspec"
-require "yabeda" # we have to require it becase of this https://github.com/yabeda-rb/yabeda/pull/38
+# require "yabeda" # we have to require it becase of this https://github.com/yabeda-rb/yabeda/pull/38
 
 require "combustion"
 
