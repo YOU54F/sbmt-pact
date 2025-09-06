@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rack-proxy"
 
   spec.add_development_dependency "appraisal", ">= 2.4"
-  spec.add_development_dependency "bundler", ">= 2.3"
+  spec.add_development_dependency "bundler", ">= 2.1"
   spec.add_development_dependency "combustion", ">= 1.3"
   spec.add_development_dependency "gruf", ">= 2.18"
   spec.add_development_dependency "rake", ">= 13.0"
