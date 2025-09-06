@@ -73,7 +73,7 @@ module Sbmt
             @provider_setup_server.state_setup_url
           end
 
-          def message_setup_url
+          def message_setup_url # rubocop:disable Rails/Delegate
             @provider_setup_server.message_setup_url
           end
 
