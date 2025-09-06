@@ -5,3 +5,5 @@ source ENV.fetch("RUBYGEMS_PUBLIC_SOURCE", "https://rubygems.org/")
 gemspec
 
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
+
+gem 'gruf', git: 'https://github.com/YOU54F/gruf.git'
