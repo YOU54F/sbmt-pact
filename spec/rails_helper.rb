@@ -35,5 +35,7 @@ require "rspec/rails"
 Dir["#{__dir__}/support/**/*.rb"].sort.each { |f| require f }
 
 # Optional dependencies
-require "sbmt/kafka_consumer"
-require "sbmt/kafka_producer"
+unless RUBY_PLATFORM =~ /win32|x64-mingw32/
+  require "sbmt/kafka_consumer"
+  require "sbmt/kafka_producer"
+end
