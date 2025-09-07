@@ -42,10 +42,10 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "combustion", ">= 1.3"
   spec.add_development_dependency "gruf", ">= 2.18"
   spec.add_development_dependency "rake", ">= 13.0"
-  unless RUBY_PLATFORM =~ /win32|x64-mingw32|x64-mingw-ucrt/
+  # unless RUBY_PLATFORM =~ /win32|x64-mingw32|x64-mingw-ucrt/
     spec.add_development_dependency "sbmt-kafka_consumer", ">= 2.0.1"
     spec.add_development_dependency "sbmt-kafka_producer", ">= 1.0"
-  end
+  # end
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "activesupport", ">= 6.1"
   spec.add_development_dependency "rspec-rails"
