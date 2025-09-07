@@ -19,6 +19,33 @@ module SbmtPactProducerDsl
       _pact_provider(:async, provider, opts: opts)
     end
 
+    def mixed_pact_provider(provider, opts: {})
+      execute_mixed_pact_provider(:mixed, provider, opts: opts)
+    end
+
+    def execute_mixed_pact_provider(transport_type, provider, opts: {})
+      raise "#{transport_type}_pact_provider is designed to be used with RSpec" unless defined?(::RSpec)
+      raise "#{transport_type}_pact_provider has to be declared at the top level of a suite" unless top_level?
+      raise "mixed_pact_provider is designed to be run once per provider so cannot be declared more than once" if defined?(@_pact_config)
+
+      pact_config_instance = Sbmt::Pact::Provider::PactConfig.new(transport_type, provider_name: provider, opts: opts)
+      instance_variable_set(:@_pact_config, pact_config_instance)
+
+      # rubocop:disable RSpec/BeforeAfterAll
+      before(:context) do
+        # rspec allows only context ivars in specs and ignores the rest
+        # so we use block-as-a-closure feature to save pact_config ivar reference and make it available for descendants
+        @_pact_config = pact_config_instance
+      end
+      # rubocop:enable RSpec/BeforeAfterAll
+
+      it "verifies mixed interactions with provider #{provider}" do
+        pact_config.start_servers
+        # todo: call any available verifier, or exit if none specified
+        pact_config.http_config.new_verifier(@_pact_config).verify!
+      end
+    end
+
     def _pact_provider(transport_type, provider, opts: {})
       raise "#{transport_type}_pact_provider is designed to be used with RSpec" unless defined?(::RSpec)
       raise "#{transport_type}_pact_provider has to be declared at the top level of a suite" unless top_level?

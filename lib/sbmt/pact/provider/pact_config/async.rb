@@ -12,8 +12,8 @@ module Sbmt
           end
 
 
-          def new_verifier
-            AsyncMessageVerifier.new(self)
+          def new_verifier(config = nil)
+            AsyncMessageVerifier.new(self, config)
           end
         end
       end

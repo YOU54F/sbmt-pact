@@ -11,7 +11,7 @@ module Sbmt
         CONTENT_TYPE = "application/protobuf"
         GRPC_CONTENT_TYPE = "application/grpc"
         PROTOBUF_PLUGIN_NAME = "protobuf"
-        PROTOBUF_PLUGIN_VERSION = "0.5.4"
+        PROTOBUF_PLUGIN_VERSION = "0.6.5"
 
         class PluginInitError < Sbmt::Pact::FfiError; end
 
