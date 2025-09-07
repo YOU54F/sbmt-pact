@@ -59,5 +59,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "faraday", "> 1.0"
   spec.add_development_dependency "webmock", ">= 3.0"
   spec.add_development_dependency "gruf-rspec", ">= 0.6.0"
-  spec.add_development_dependency "karafka-rdkafka", ">= 0.20.0"
+  # spec.add_development_dependency "karafka-rdkafka", ">= 0.20.0" # use for darwin-arm64 (locally)
 end
