@@ -6,7 +6,6 @@ ENV["RAILS_ENV"] = "test"
 # load fixtures and support files
 require "pathname"
 ENGINE_ROOT = Pathname.new(File.expand_path("..", __dir__))
-
 require "webmock"
 require "vcr"
 require "faraday"

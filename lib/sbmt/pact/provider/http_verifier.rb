@@ -27,10 +27,6 @@ module Sbmt
           # so we don't need to explicitly add the transport here
         end
 
-        def set_filter_info(pact_handle)
-          PactFfi::Verifier.set_filter_info(pact_handle, "^http:.+", nil, 0)
-        end
-
         def start_servers!
           super
           @http_server.start
