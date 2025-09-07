@@ -35,10 +35,10 @@ require "rspec/rails"
 Dir["#{__dir__}/support/**/*.rb"].sort.each { |f| require f }
 
 # Optional dependencies
-# unless RUBY_PLATFORM =~ /win32|x64-mingw32|x64-mingw-ucrt/
+unless RUBY_PLATFORM =~ /win32|x64-mingw32|x64-mingw-ucrt/
   require "sbmt/kafka_consumer"
   require "sbmt/kafka_producer"
-# end
+end
 
 # Monkey patch Gruf::Server to remove QUIT from KILL_SIGNALS for windows compatibility
 if Gem.win_platform?
