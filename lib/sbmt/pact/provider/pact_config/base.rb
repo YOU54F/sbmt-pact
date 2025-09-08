@@ -36,7 +36,7 @@ module Sbmt
             @broker_token = ENV.fetch("PACT_BROKER_TOKEN", nil) || opts.fetch(:broker_token, nil)
             @verify_only = [ENV.fetch("PACT_CONSUMER_FULL_NAME", nil)].compact || opts.fetch(:verify_only, [])
 
-            @provider_setup_server = ProviderServerRunner.new(port: @provider_setup_port)
+            @provider_setup_server = opts[:provider_setup_server] || ProviderServerRunner.new(port: @provider_setup_port)
             if @broker_url.present?
               @pact_proxy_server = PactBrokerProxyRunner.new(
                 port: @pact_proxy_port,

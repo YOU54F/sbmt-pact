@@ -83,9 +83,24 @@ module SbmtPactProducerDsl
     end
 
     def handle_message(name, opts: {}, &block)
-      raise "message_pact_provider should be declared first" unless pact_config
-      raise "message_pact_provider should be declared first" unless pact_config.is_a?(Sbmt::Pact::Provider::PactConfig::Async)
-      pact_config.new_message_handler(name, opts: opts, &block)
+      async_klass = Sbmt::Pact::Provider::PactConfig::Async
+      if defined?(@_pact_config) &&
+          @_pact_config.respond_to?(:async_config) &&
+          @_pact_config.async_config.is_a?(async_klass)
+        @_pact_config.async_config.new_message_handler(name, opts: opts, &block)
+      elsif pact_config &&
+          pact_config.respond_to?(:async_config) &&
+          pact_config.async_config.is_a?(async_klass)
+        pact_config.async_config.new_message_handler(name, opts: opts, &block)
+      elsif defined?(@_pact_config) &&
+          @_pact_config.is_a?(async_klass)
+        @_pact_config.new_message_handler(name, opts: opts, &block)
+      elsif pact_config.is_a?(async_klass)
+        pact_config.new_message_handler(name, opts: opts, &block)
+
+      else
+        raise "handle_message can only be used with message_pact_provider or mixed_pact_provider with an async block"
+      end
     end
 
     def pact_config

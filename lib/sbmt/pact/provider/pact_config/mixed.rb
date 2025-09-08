@@ -16,7 +16,7 @@ module Sbmt
 
           def initialize(provider_name:, opts: {})
             super
-            @provider_setup_server = opts[:provider_setup_server] || ProviderServerRunner.new(port: @provider_setup_port)
+            @provider_setup_server = ProviderServerRunner.new(port: @provider_setup_port)
             if @broker_url.present?
               @pact_proxy_server = PactBrokerProxyRunner.new(
                 port: @pact_proxy_port,
@@ -26,9 +26,9 @@ module Sbmt
                 pact_broker_token: @broker_token
               )
             end
-            @async_config = opts[:async] ? Async.new(provider_name: provider_name, opts: opts[:async].merge(provider_setup_server: provider_setup_server, pact_proxy_server: @pact_proxy_server)) : nil
-            @grpc_config = opts[:grpc] ? Grpc.new(provider_name: provider_name, opts: opts[:grpc].merge(provider_setup_server: provider_setup_server, pact_proxy_server: @pact_proxy_server)) : nil
             @http_config = opts[:http] ? Http.new(provider_name: provider_name, opts: opts[:http].merge(provider_setup_server: provider_setup_server, pact_proxy_server: @pact_proxy_server)) : nil
+            @grpc_config = opts[:grpc] ? Grpc.new(provider_name: provider_name, opts: opts[:grpc].merge(provider_setup_server: provider_setup_server, pact_proxy_server: @pact_proxy_server)) : nil
+            @async_config = opts[:async] ? Async.new(provider_name: provider_name, opts: opts[:async].merge(provider_setup_server: provider_setup_server, pact_proxy_server: @pact_proxy_server)) : nil
           end
 
           def configs

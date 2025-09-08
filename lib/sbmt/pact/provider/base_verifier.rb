@@ -89,7 +89,7 @@ module Sbmt
 
           if defined?(@mixed_config.async_config) && @mixed_config.async_config
             setup_uri = URI(@mixed_config.async_config.message_setup_url)
-            PactFfi::Verifier.add_provider_transport(pact_handle, "async", setup_uri.port, setup_uri.path, "")
+            PactFfi::Verifier.add_provider_transport(handle, "message", setup_uri.port, setup_uri.path, "")
           end
 
           # todo: add http transport?
